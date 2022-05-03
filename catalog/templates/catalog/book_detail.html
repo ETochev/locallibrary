@@ -1,0 +1,60 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>Title: {{ book.title }}</h1>
+
+  <p><strong>Author:</strong> <a href="{{ book.author.get_absolute_url }}">{{ book.author }}</a></p>
+
+  <p><strong>Summary:</strong> {{ book.summary }}</p>
+  <p><strong>ISBN:</strong> {{ book.isbn }}</p>
+  <p><strong>Language:</strong> {{ book.language }}</p>
+  <p><strong>Genre:</strong> {{ book.genre.all|join:", " }}</p>
+
+  <div style="margin-left:20px;margin-top:20px">
+    <h4>Copies</h4>
+
+    {% for copy in book.bookinstance_set.all %}
+      <hr>
+      <p class="{% if copy.status == 'a' %}text-success{% elif copy.status == 'm' %}text-danger{% else %}text-warning{% endif %}">
+        {{ copy.get_status_display }}
+      </p>
+      {% if copy.status != 'a' %}
+        <p><strong>Due to be returned:</strong> {{ copy.due_back }}</p>
+      {% endif %}
+      <p><strong>Imprint:</strong> {{ copy.imprint }}</p>
+      <p class="text-muted"><strong>Id:</strong> {{ copy.id }}</p>
+    {% endfor %}
+  </div>
+{% endblock %}
+
+{% block sidebar %}
+  <ul class="sidebar-nav">
+
+    <li><a href="{% url 'index' %}">Home</a></li>
+    <li><a href="{% url 'books' %}">All books</a></li>
+    <li><a href="{% url 'authors' %}">All authors</a></li>
+  </ul>
+
+  {% if user.is_authenticated %}
+    <li>User: {{ user.get_username }}</li>
+    <li><a href="{% url 'my-borrowed' %}">My Borrowed</a></li>
+    <li><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></li>
+  {% else %}
+    <li><a href="{% url 'login'%}?next={{request.path}}">Login</a></li>
+  {% endif %}
+ </ul>
+
+ {% if user.is_staff %} <!--set when generating the user groups through admin site-->
+  <hr />
+  <ul class="sidebar-nav">
+    <li>Staff</li>
+    {% if perms.catalog.can_mark_returned %}
+    <li><a href="{% url 'all-borrowed' %}">All borrowed</a></li>
+    <li><a href="{% url 'book-create' %}">Add Book</a></li>
+    <li><a href="{{ book.get_absolute_url }}/update">Update Book</a></li>
+    <li><a href="{{ Book.get_absolute_url }}/delete"">Delete Book</a></li>
+    {% endif %}
+  </ul>
+ {% endif %}
+
+{% endblock %}
